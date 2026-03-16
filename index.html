@@ -15,6 +15,15 @@
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600&display=swap');
         .font-serif { font-family: 'Instrument Serif', serif; }
         body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom styles for the expanding description */
+        .description-container {
+            transition: all 0.3s ease-in-out;
+        }
+        .group:hover .description-expand {
+            -webkit-line-clamp: unset !important;
+            line-clamp: unset !important;
+        }
     </style>
 </head>
 <body>
@@ -99,14 +108,12 @@
                         setUnclaimingItem(null);
                         setUnclaimEmail('');
                     } else {
-                        // Display the specific error message from the script
                         setUnclaimError(result.message || 'Invalid email address.');
                     }
                 } catch (error) {
                     console.error("Unclaim error:", error);
                     setUnclaimError("Server error. Please try again.");
                 } finally {
-                    // FIX: Ensure submitting is false so the button unlocks for another attempt
                     setSubmitting(false);
                 }
             };
@@ -127,15 +134,15 @@
                                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-200"></div>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
                                 {items.map((item) => {
                                     const hasEmail = item.buyeremail && String(item.buyeremail).trim() !== '';
                                     const hasName = item.buyername && String(item.buyername).trim() !== '';
                                     const isClaimed = hasEmail || hasName;
                                     
                                     return (
-                                        <div key={item.id} className="bg-white rounded-3xl shadow-sm overflow-hidden border border-stone-100 flex flex-col group transition-all">
-                                            <div className="aspect-square relative overflow-hidden bg-stone-50">
+                                        <div key={item.id} className="bg-white rounded-3xl shadow-sm overflow-hidden border border-stone-100 flex flex-col group transition-all h-full hover:shadow-md">
+                                            <div className="aspect-square relative overflow-hidden bg-stone-50 shrink-0">
                                                 <img src={item.imageUrl} className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${isClaimed ? 'opacity-40 grayscale' : ''}`} />
                                                 {isClaimed && (
                                                     <div className="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-[2px]">
@@ -146,9 +153,13 @@
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="p-8 flex flex-col flex-grow">
+                                            <div className="p-8 flex flex-col flex-grow min-h-0">
                                                 <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                                                <p className="text-stone-500 text-sm mb-8 leading-relaxed line-clamp-2">{item.description}</p>
+                                                <div className="mb-8 flex-grow">
+                                                    <p className="text-stone-500 text-sm leading-relaxed line-clamp-2 description-expand transition-all duration-300">
+                                                        {item.description}
+                                                    </p>
+                                                </div>
                                                 <div className="mt-auto space-y-3">
                                                     <a href={item.purchaseUrl} target="_blank" className="flex items-center justify-center gap-2 w-full py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-2xl transition-colors font-medium text-sm">
                                                         <span>🔗</span> View in Store
