@@ -23,7 +23,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // REPLACE THIS with your deployed Google Apps Script URL later
+        // UPDATED: Using your provided Apps Script URL
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwpEZyS46_gQ0E9ohEx8m0JwKcduqC7UVs_4jQh44RB2jxC2jB5U17-Er1A_-O2mMWQ/exec';
 
         function App() {
@@ -41,43 +41,6 @@
             }, []);
 
             const fetchItems = async () => {
-                if (GOOGLE_APPS_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
-                    // Mock data for demo mode (updated to lowercase keys to match your script)
-                    setTimeout(() => {
-                        setItems([
-                            {
-                                id: '1',
-                                title: 'Stokke Tripp Trapp High Chair',
-                                description: 'Adjustable high chair in Natural wood finish.',
-                                imageUrl: 'https://images.unsplash.com/photo-1517705008128-361805f42e86?auto=format&fit=crop&q=80&w=800',
-                                purchaseUrl: 'https://example.com/chair',
-                                buyername: '',
-                                buyeremail: ''
-                            },
-                            {
-                                id: '2',
-                                title: 'Organic Cotton Onesies',
-                                description: 'Pack of 5 neutral colors, size 3-6 months.',
-                                imageUrl: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=800',
-                                purchaseUrl: 'https://example.com/onesies',
-                                buyername: 'Aunt Sarah',
-                                buyeremail: 'sarah@example.com'
-                            },
-                            {
-                                id: '3',
-                                title: 'Baby Bjorn Bouncer',
-                                description: 'Ergonomic bouncer with natural rocking.',
-                                imageUrl: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&q=80&w=800',
-                                purchaseUrl: 'https://example.com/bouncer',
-                                buyername: '',
-                                buyeremail: ''
-                            }
-                        ]);
-                        setLoading(false);
-                    }, 1000);
-                    return;
-                }
-
                 try {
                     const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getItems`);
                     const data = await response.json();
@@ -93,18 +56,6 @@
             const handleClaimSubmit = async (e) => {
                 e.preventDefault();
                 setSubmitting(true);
-
-                if (GOOGLE_APPS_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
-                    setItems(items.map(item => 
-                        item.id === claimingItem.id 
-                            ? { ...item, buyername: claimForm.name, buyeremail: claimForm.email } 
-                            : item
-                    ));
-                    setSubmitting(false);
-                    setClaimingItem(null);
-                    setClaimForm({ name: '', email: '' });
-                    return;
-                }
 
                 try {
                     await fetch(GOOGLE_APPS_SCRIPT_URL, {
@@ -132,20 +83,6 @@
                 setSubmitting(true);
                 setUnclaimError('');
 
-                if (GOOGLE_APPS_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
-                    if (unclaimingItem.buyeremail.toLowerCase() === unclaimEmail.toLowerCase()) {
-                        setItems(items.map(item => 
-                            item.id === unclaimingItem.id ? { ...item, buyername: '', buyeremail: '' } : item
-                        ));
-                        setUnclaimingItem(null);
-                        setUnclaimEmail('');
-                    } else {
-                        setUnclaimError('Email does not match our records.');
-                    }
-                    setSubmitting(false);
-                    return;
-                }
-
                 try {
                     const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
                         method: 'POST',
@@ -162,11 +99,14 @@
                         setUnclaimingItem(null);
                         setUnclaimEmail('');
                     } else {
-                        setUnclaimError(result.message);
+                        // Display the specific error message from the script
+                        setUnclaimError(result.message || 'Invalid email address.');
                     }
                 } catch (error) {
-                    setUnclaimError("Server error.");
+                    console.error("Unclaim error:", error);
+                    setUnclaimError("Server error. Please try again.");
                 } finally {
+                    // FIX: Ensure submitting is false so the button unlocks for another attempt
                     setSubmitting(false);
                 }
             };
@@ -184,12 +124,11 @@
                     <main className="max-w-6xl mx-auto px-4 py-12">
                         {loading ? (
                             <div className="flex justify-center items-center h-64">
-                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-rose-400"></div>
+                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-200"></div>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                 {items.map((item) => {
-                                    // UPDATED: Using lowercase keys to match your console output
                                     const hasEmail = item.buyeremail && String(item.buyeremail).trim() !== '';
                                     const hasName = item.buyername && String(item.buyername).trim() !== '';
                                     const isClaimed = hasEmail || hasName;
@@ -215,11 +154,11 @@
                                                         <span>🔗</span> View in Store
                                                     </a>
                                                     {!isClaimed ? (
-                                                        <button onClick={() => setClaimingItem(item)} className="flex items-center justify-center gap-2 w-full py-3 bg-rose-400 hover:bg-rose-500 text-white rounded-2xl shadow-sm font-medium text-sm transition-colors">
-                                                            <span>🎁</span> I Bought This
+                                                        <button onClick={() => setClaimingItem(item)} className="flex items-center justify-center gap-2 w-full py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-2xl shadow-sm font-medium text-sm transition-colors">
+                                                            <span>🎁</span> I Plan To Buy This
                                                         </button>
                                                     ) : (
-                                                        <button onClick={() => setUnclaimingItem(item)} className="w-full py-3 text-stone-400 hover:text-rose-500 text-sm font-medium transition-colors">
+                                                        <button onClick={() => setUnclaimingItem(item)} className="w-full py-3 text-stone-400 hover:text-blue-400 text-sm font-medium transition-colors">
                                                             Change of mind? Unclaim
                                                         </button>
                                                     )}
@@ -240,15 +179,17 @@
                                 <form onSubmit={handleClaimSubmit} className="space-y-5">
                                     <div>
                                         <label className="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Your Name</label>
-                                        <input type="text" required className="w-full px-5 py-4 rounded-2xl border border-stone-200 focus:ring-2 focus:ring-rose-300 outline-none" value={claimForm.name} onChange={(e) => setClaimForm({ ...claimForm, name: e.target.value })} />
+                                        <input type="text" required className="w-full px-5 py-4 rounded-2xl border border-stone-200 focus:ring-2 focus:ring-blue-100 outline-none" value={claimForm.name} onChange={(e) => setClaimForm({ ...claimForm, name: e.target.value })} />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Your Email</label>
-                                        <input type="email" required className="w-full px-5 py-4 rounded-2xl border border-stone-200 focus:ring-2 focus:ring-rose-300 outline-none" value={claimForm.email} onChange={(e) => setClaimForm({ ...claimForm, email: e.target.value })} />
+                                        <input type="email" required className="w-full px-5 py-4 rounded-2xl border border-stone-200 focus:ring-2 focus:ring-blue-100 outline-none" value={claimForm.email} onChange={(e) => setClaimForm({ ...claimForm, email: e.target.value })} />
                                     </div>
                                     <div className="flex gap-4 pt-4">
                                         <button type="button" onClick={() => setClaimingItem(null)} className="flex-1 py-4 bg-stone-100 rounded-2xl font-medium">Cancel</button>
-                                        <button type="submit" disabled={submitting} className="flex-1 py-4 bg-rose-400 text-white rounded-2xl font-medium shadow-lg">Confirm</button>
+                                        <button type="submit" disabled={submitting} className="flex-1 py-4 bg-blue-100 text-blue-700 rounded-2xl font-medium shadow-lg disabled:opacity-50">
+                                            {submitting ? 'Confirming...' : 'Confirm'}
+                                        </button>
                                     </div>
                                 </form>
                             </div>
@@ -261,11 +202,22 @@
                                 <h2 className="text-3xl font-serif mb-4">Unclaim Gift</h2>
                                 <p className="text-stone-500 text-sm mb-6">Enter the email used to claim this item.</p>
                                 <form onSubmit={handleUnclaimSubmit} className="space-y-5">
-                                    <input type="email" required className="w-full px-5 py-4 rounded-2xl border border-stone-200 focus:ring-2 focus:ring-rose-300 outline-none" value={unclaimEmail} onChange={(e) => setUnclaimEmail(e.target.value)} />
+                                    <input 
+                                        type="email" 
+                                        required 
+                                        className="w-full px-5 py-4 rounded-2xl border border-stone-200 focus:ring-2 focus:ring-blue-100 outline-none" 
+                                        value={unclaimEmail} 
+                                        onChange={(e) => {
+                                            setUnclaimEmail(e.target.value);
+                                            if(unclaimError) setUnclaimError('');
+                                        }} 
+                                    />
                                     {unclaimError && <p className="text-rose-500 text-sm font-medium">{unclaimError}</p>}
                                     <div className="flex gap-4 pt-4">
                                         <button type="button" onClick={() => { setUnclaimingItem(null); setUnclaimError(''); }} className="flex-1 py-4 bg-stone-100 rounded-2xl font-medium">Cancel</button>
-                                        <button type="submit" disabled={submitting} className="flex-1 py-4 bg-stone-800 text-white rounded-2xl font-medium">Unclaim</button>
+                                        <button type="submit" disabled={submitting} className="flex-1 py-4 bg-stone-800 text-white rounded-2xl font-medium disabled:opacity-50">
+                                            {submitting ? 'Verifying...' : 'Unclaim'}
+                                        </button>
                                     </div>
                                 </form>
                             </div>
