@@ -16,13 +16,29 @@
         .font-serif { font-family: 'Instrument Serif', serif; }
         body { font-family: 'Inter', sans-serif; }
         
-        /* Custom styles for the expanding description */
-        .description-container {
-            transition: all 0.3s ease-in-out;
+        /* DESKTOP HOVER LOGIC */
+        /* Only apply the line-clamping and hover-expansion on devices that support hover (desktops) */
+        @media (hover: hover) {
+            .description-expand {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                transition: all 0.3s ease-in-out;
+            }
+            .group:hover .description-expand {
+                -webkit-line-clamp: unset !important;
+                display: block;
+            }
         }
-        .group:hover .description-expand {
-            -webkit-line-clamp: unset !important;
-            line-clamp: unset !important;
+
+        /* MOBILE LOGIC */
+        /* On touch devices or small screens where hover isn't standard, show full text */
+        @media (hover: none) {
+            .description-expand {
+                display: block;
+                -webkit-line-clamp: unset !important;
+            }
         }
     </style>
 </head>
@@ -32,7 +48,6 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // UPDATED: Using your provided Apps Script URL
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwpEZyS46_gQ0E9ohEx8m0JwKcduqC7UVs_4jQh44RB2jxC2jB5U17-Er1A_-O2mMWQ/exec';
 
         function App() {
@@ -53,7 +68,6 @@
                 try {
                     const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getItems`);
                     const data = await response.json();
-                    console.log("Fetched Items Data:", data); 
                     setItems(data);
                 } catch (error) {
                     console.error("Error fetching items:", error);
@@ -65,7 +79,6 @@
             const handleClaimSubmit = async (e) => {
                 e.preventDefault();
                 setSubmitting(true);
-
                 try {
                     await fetch(GOOGLE_APPS_SCRIPT_URL, {
                         method: 'POST',
@@ -91,7 +104,6 @@
                 e.preventDefault();
                 setSubmitting(true);
                 setUnclaimError('');
-
                 try {
                     const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
                         method: 'POST',
@@ -136,9 +148,7 @@
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
                                 {items.map((item) => {
-                                    const hasEmail = item.buyeremail && String(item.buyeremail).trim() !== '';
-                                    const hasName = item.buyername && String(item.buyername).trim() !== '';
-                                    const isClaimed = hasEmail || hasName;
+                                    const isClaimed = (item.buyeremail && item.buyeremail.trim() !== '') || (item.buyername && item.buyername.trim() !== '');
                                     
                                     return (
                                         <div key={item.id} className="bg-white rounded-3xl shadow-sm overflow-hidden border border-stone-100 flex flex-col group transition-all h-full hover:shadow-md">
@@ -156,7 +166,8 @@
                                             <div className="p-8 flex flex-col flex-grow min-h-0">
                                                 <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
                                                 <div className="mb-8 flex-grow">
-                                                    <p className="text-stone-500 text-sm leading-relaxed line-clamp-2 description-expand transition-all duration-300">
+                                                    {/* This class uses the CSS media queries defined above */}
+                                                    <p className="text-stone-500 text-sm leading-relaxed description-expand transition-all duration-300">
                                                         {item.description}
                                                     </p>
                                                 </div>
